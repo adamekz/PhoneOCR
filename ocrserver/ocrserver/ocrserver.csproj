@@ -124,6 +124,15 @@
     <None Include="tessdata\eng.traineddata">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="tessdata\pol.DangAmbigs" />
+    <None Include="tessdata\pol.freq-dawg" />
+    <None Include="tessdata\pol.inttemp" />
+    <None Include="tessdata\pol.normproto" />
+    <None Include="tessdata\pol.pffmtable" />
+    <None Include="tessdata\pol.traineddata" />
+    <None Include="tessdata\pol.unicharset" />
+    <None Include="tessdata\pol.user-words" />
+    <None Include="tessdata\pol.word-dawg" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="x86\cublas32_42_9.dll">

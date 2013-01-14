@@ -53,9 +53,8 @@ namespace ocrserver
         private void server()
         {
             int port = 8001;
-            //port++;
-            IPAddress ipAd = IPAddress.Parse(ip);
             
+            IPAddress ipAd = IPAddress.Parse(ip);            
             
             // use local m/c IP address, and 
             // use the same in the client
@@ -70,58 +69,40 @@ namespace ocrserver
             
             byte[] b = new byte[2000000];
             myList.Start();
-
+            
             while (!stoped)
             {
-               /* try
-                {*/
-                                       
+                    char[] recived = new char[2000000];                   
                     Console.WriteLine("Waiting for a connection.....");
 
                     TcpClient s = myList.AcceptTcpClient();
-                    Console.WriteLine("Connection accepted");
+                    Console.WriteLine("Connection accepted " +s.Client.RemoteEndPoint);
                     NetworkStream stream = s.GetStream();
-                    //b = null;
-                    //int k = s.Receive(b);
+                    
                     var reader = new StreamReader(stream);
 
-                    b =  asen.GetBytes(reader.ReadToEnd());
-
+                    var k = stream.Read(b, 0, 2000000);
+                    
                     Console.WriteLine("Recieved...");
-                    /*for (int i = 0; i < k; i++)
-                        Console.Write(Convert.ToChar(b[i]));*/
-
-                   /* ImageConverter conv = new ImageConverter();
+                   
+                    ImageConverter conv = new ImageConverter();
                     Bitmap rec = new Bitmap((Bitmap)conv.ConvertFrom(b));
-                   // pictureBox1.Image = rec;
-                    rec.Save("G:\\serv_test.bmp");
+                   
                     Console.WriteLine("Recognicion...");
-                    Tesseract ocr = new Tesseract("tessdata", "eng", Tesseract.OcrEngineMode.OEM_DEFAULT);
-
+                    Tesseract ocr = new Tesseract("tessdata", "pol+eng", Tesseract.OcrEngineMode.OEM_DEFAULT);
+                   
                     ocr.Recognize<Bgr>(new Emgu.CV.Image<Bgr, Byte>(rec));
-                   // recognizedText.Text = ocr.GetText();
+                   
                     string to_send_str = ocr.GetText();
                     ocr.Dispose();
                     Console.Write(to_send_str + "\n");
-                    ASCIIEncoding asen = new ASCIIEncoding();
-                    s.Send(asen.GetBytes(to_send_str));*/
-                    var writer = new StreamWriter(stream);
-
-                    //s.Send(asen.GetBytes("OK!"));
-                    writer.Write("OK!");
+                   
+                    stream.Write(asen.GetBytes(to_send_str),0,to_send_str.Length);
+                    
                     Console.WriteLine("\nSent Acknowledgement");
                     /* clean up */
                     s.Close();
-                   
                     
-
-              /*  }
-                catch (Exception e)
-                {
-                    Console.WriteLine("Error..... " + e.StackTrace);
-                    stoped = true;
-                }   */
-                
            }
             myList.Stop();
             Console.WriteLine("Server stopped");

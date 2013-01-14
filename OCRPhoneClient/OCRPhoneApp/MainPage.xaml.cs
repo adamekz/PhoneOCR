@@ -220,42 +220,24 @@ namespace OCRPhoneApp
             }*/
             textBox4.Text = img[3000].ToString();
 
-         /*   IPAddress ipa = IPAddress.Parse(textBox1.Text);
+          /*  IPAddress ipa = IPAddress.Parse("127.0.0.1");
             IPEndPoint end = new IPEndPoint(ipa, 8001);*/
-            var to_transmit = new TcpClient("127.0.0.1",8001);
+            TcpClient to_transmit = new TcpClient("127.0.0.1",8001);
             
            // to_transmit.Connect(textBox1.Text, 8001);
             //to_transmit.Connect(end);
-
-            var trans_stream = to_transmit.GetStream();
-            var reader = new StreamReader(trans_stream);
-            //trans_stream.Write(img, 0, img.Length);
-            using (var writer = new StreamWriter(trans_stream))
-            {
-                var txt = "OK?";
-                byte[] txtb = new byte[txt.Length];
-                for (int i = 0; i < txt.Length; i++)
-                {
-                    txtb[i] = Convert.ToByte(txt[i]);
-                }
-                writer.Write(txtb);
-                //writer.Write(txtb, 0, txtb.Length);
-            }
+            
+            NetworkStream trans_stream = to_transmit.GetStream();
+            trans_stream.Write(img, 0, img.Length);            
 
             if (to_transmit.Connected != true) textBox4.Text = "Conn error!";
 
             byte[] resp = new byte[1000000];
-            //int max = trans_stream.Read(resp, 0, 1000000);
+            int max = trans_stream.Read(resp, 0, 1000000);
             
-           // for (int i = 0; i < max; i++) textBox2.Text += Convert.ToChar(resp[i]);
-            string rec = "";
-            var message = new StringBuilder();
-            while ((rec = reader.ReadLine()) != null)
-            {
-                message.Append(rec);
-            }
+            for (int i = 0; i < max; i++) textBox2.Text += Convert.ToChar(resp[i]);
+           
 
-            textBox2.Text = message.ToString();
 
             trans_stream.Dispose();
             to_transmit.Dispose();
