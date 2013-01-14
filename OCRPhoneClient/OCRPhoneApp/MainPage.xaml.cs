@@ -12,13 +12,13 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 using Microsoft.Phone.Controls;
-//using SocketEx;
+using SocketEx;
 using System.IO.IsolatedStorage;
 using System.Windows.Media.Imaging;
 using System.Text;
 using Microsoft.Hawaii;
 using Microsoft.Hawaii.Ocr.Client;
-using System.Threading;
+
 
 
 namespace OCRPhoneApp
@@ -32,13 +32,11 @@ namespace OCRPhoneApp
 
     public partial class MainPage : PhoneApplicationPage
     {
-        
-
         StreamReader Reader = null;
         byte[] file = new byte[2000000];
         BitmapImage image = new BitmapImage();
       //  public IDuplexTypedMessageSender<string, SendBitmap> Sender;
-        static ManualResetEvent cl_done = new ManualResetEvent(false);
+        
         
 
         // Constructor
@@ -222,133 +220,49 @@ namespace OCRPhoneApp
             }*/
             textBox4.Text = img[3000].ToString();
 
-           // TcpClient to_transmit = new TcpClient();
-
-            SocketAsyncEventArgs socketEvArg = new SocketAsyncEventArgs();
-
-            DnsEndPoint entry = new DnsEndPoint(/*textBox1.Text, 8001*/"http://www.wp.pl",80,AddressFamily.InterNetwork);
-            Console.WriteLine(entry.Host.ToString() + ":" + entry.Port.ToString());
-            Socket to_transmit = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            //to_transmit.Connect(textBox1.Text, 8001);
-            //to_transmit.
-
-            socketEvArg.RemoteEndPoint = entry;
-            socketEvArg.UserToken = to_transmit;
-
-            socketEvArg.Completed += new EventHandler<SocketAsyncEventArgs>(SocketEvArg_Completed);
-
+         /*   IPAddress ipa = IPAddress.Parse(textBox1.Text);
+            IPEndPoint end = new IPEndPoint(ipa, 8001);*/
+            var to_transmit = new TcpClient("127.0.0.1",8001);
             
-            to_transmit.ConnectAsync(socketEvArg);
-            cl_done.WaitOne();
-           // Stream trans_stream = to_transmit.GetStream();
+           // to_transmit.Connect(textBox1.Text, 8001);
+            //to_transmit.Connect(end);
 
+            var trans_stream = to_transmit.GetStream();
+            var reader = new StreamReader(trans_stream);
+            //trans_stream.Write(img, 0, img.Length);
+            using (var writer = new StreamWriter(trans_stream))
+            {
+                var txt = "OK?";
+                byte[] txtb = new byte[txt.Length];
+                for (int i = 0; i < txt.Length; i++)
+                {
+                    txtb[i] = Convert.ToByte(txt[i]);
+                }
+                writer.Write(txtb);
+                //writer.Write(txtb, 0, txtb.Length);
+            }
+
+            if (to_transmit.Connected != true) textBox4.Text = "Conn error!";
+
+            byte[] resp = new byte[1000000];
+            //int max = trans_stream.Read(resp, 0, 1000000);
             
+           // for (int i = 0; i < max; i++) textBox2.Text += Convert.ToChar(resp[i]);
+            string rec = "";
+            var message = new StringBuilder();
+            while ((rec = reader.ReadLine()) != null)
+            {
+                message.Append(rec);
+            }
 
-           
-            /*
+            textBox2.Text = message.ToString();
+
             trans_stream.Dispose();
-            to_transmit.Dispose();*/
+            to_transmit.Dispose();
 
             //to_transmit.EndConnect();
             //textBox4.Text = stream.Length.ToString();
         }
-
-        void SocketEvArg_Completed(object sender, SocketAsyncEventArgs e)
-        {
-            switch (e.LastOperation)
-            {
-                case SocketAsyncOperation.Connect:
-                    ProcessConnect(e);
-                    break;
-
-                case SocketAsyncOperation.Receive:
-                    ProcessReceive(e);
-                    break;
-
-                case SocketAsyncOperation.Send:
-                    ProcessSend(e);
-                    break;
-
-                default:
-                    throw new Exception("Invalid operation completed");
-            }
-        }
-        private void ProcessConnect(SocketAsyncEventArgs e)
-        {
-            if (e.SocketError == SocketError.Success)
-            {
-                // Successfully connected to the server
-
-                // Send 'Hello World' to the server
-                IsolatedStorageFile fileStorage = IsolatedStorageFile.GetUserStoreForApplication();
-
-                IsolatedStorageFileStream stream = new IsolatedStorageFileStream("Intro English.jpg", FileMode.Open, fileStorage);
-                byte[] img = new byte[stream.Length];
-                long seekPos = stream.Seek(0, SeekOrigin.Begin);
-                stream.Read(img, 0, img.Length);
-                seekPos = stream.Seek(0, SeekOrigin.Begin);
-                
-                e.SetBuffer(img, 0, img.Length);
-                Socket sock = e.UserToken as Socket;
-                bool willRaiseEvent = sock.SendAsync(e);
-
-                if (!willRaiseEvent)
-                {
-                    ProcessSend(e);
-                }
-            }
-            else
-            {
-                throw new SocketException((int)e.SocketError);
-            }
-        }
-
-        // Called when a ReceiveAsync operation completes
-        // </summary>
-        private void ProcessReceive(SocketAsyncEventArgs e)
-        {
-            if (e.SocketError == SocketError.Success)
-            {
-                // Received data from server
-                for (int i = 0; i < e.Buffer.Length; i++) textBox2.Text += Convert.ToChar(e.Buffer[i]);
-                // Data has now been sent and received from the server. 
-                // Disconnect from the server
-                Socket sock = e.UserToken as Socket;
-                sock.Shutdown(SocketShutdown.Send);
-                sock.Close();
-                cl_done.Set();
-            }
-            else
-            {
-                throw new SocketException((int)e.SocketError);
-            }
-        }
-
-
-        // Called when a SendAsync operation completes
-        private void ProcessSend(SocketAsyncEventArgs e)
-        {
-            if (e.SocketError == SocketError.Success)
-            {
-                // Sent "Hello World" to the server successfully
-
-                //Read data sent from the server
-                Socket sock = e.UserToken as Socket;
-                bool willRaiseEvent = sock.ReceiveAsync(e);
-                
-                
-
-                if (!willRaiseEvent)
-                {
-                    ProcessReceive(e);
-                }
-            }
-            else
-            {
-                throw new SocketException((int)e.SocketError);
-            }
-            
-        }
-
+       
     }
 }
